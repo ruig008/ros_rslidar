@@ -736,7 +736,7 @@ int RawData::estimateTemperature(float Temper)
  *  @param pkt raw packet to unpack
  *  @param pc shared pointer to point cloud (points are appended)
  */
-void RawData::unpack(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<pcl::PointXYZI>::Ptr pointcloud)
+void RawData::unpack(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<rslidar_pointcloud::PointXYZIRT>::Ptr pointcloud)
 {
   //check pkt header
   if (pkt.data[0] != 0x55 || pkt.data[1] != 0xAA || pkt.data[2] != 0x05 || pkt.data[3] != 0x0A)
@@ -833,7 +833,12 @@ void RawData::unpack(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<pcl
         float arg_horiz = (float)azimuth_corrected / 18000.0f * M_PI;
         float arg_horiz_orginal = arg_horiz;
         float arg_vert = VERT_ANGLE[dsr];
-        pcl::PointXYZI point;
+        rslidar_pointcloud::PointXYZIRT point;
+        // CAUTION:
+        // (1) timestamp calculation is different with velodyne, as velodyne depends on private data
+        // (2) ring is set 0 per suggested by Shengliang, as unify_lidars reset it accordingly
+        point.timestamp = pkt.stamp.sec + pkt.stamp.nsec * 1e-9;
+        point.ring = 0;
 
         if (distance2 > max_distance_ || distance2 < min_distance_ ||
             (angle_flag_ && (arg_horiz < start_angle_ || arg_horiz > end_angle_)) ||
@@ -864,7 +869,7 @@ void RawData::unpack(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<pcl
   }
 }
 
-void RawData::unpack_RS32(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<pcl::PointXYZI>::Ptr pointcloud)
+void RawData::unpack_RS32(const rslidar_msgs::rslidarPacket& pkt, pcl::PointCloud<rslidar_pointcloud::PointXYZIRT>::Ptr pointcloud)
 {
   float azimuth;  // 0.01 dgree
   float intensity;
@@ -956,7 +961,7 @@ void RawData::unpack_RS32(const rslidar_msgs::rslidarPacket& pkt, pcl::PointClou
         float arg_horiz_orginal = (float)azimuth_corrected_f / 18000.0f * M_PI;
         float arg_horiz = (float)azimuth_corrected / 18000.0f * M_PI;
         float arg_vert = VERT_ANGLE[dsr];
-        pcl::PointXYZI point;
+        rslidar_pointcloud::PointXYZIRT point;
 
         if (distance2 > max_distance_ || distance2 < min_distance_ ||
             (angle_flag_ && (arg_horiz < start_angle_ || arg_horiz > end_angle_)) ||
@@ -1036,7 +1041,12 @@ void RawData::unpack_RS32(const rslidar_msgs::rslidarPacket& pkt, pcl::PointClou
         float arg_horiz_orginal = (float)azimuth_corrected_f / 18000.0f * M_PI;
         float arg_horiz = (float)azimuth_corrected / 18000.0f * M_PI;
         float arg_vert = VERT_ANGLE[dsr];
-        pcl::PointXYZI point;
+        rslidar_pointcloud::PointXYZIRT point;
+        // CAUTION:
+        // (1) timestamp calculation is different with velodyne, as velodyne depends on private data
+        // (2) ring is set 0 per suggested by Shengliang, as unify_lidars reset it accordingly
+        point.timestamp = pkt.stamp.sec + pkt.stamp.nsec * 1e-9;
+        point.ring = 0;
 
         if (distance2 > max_distance_ || distance2 < min_distance_ ||
             (angle_flag_ && (arg_horiz < start_angle_ || arg_horiz > end_angle_)) ||
